@@ -112,11 +112,19 @@ class FounderAgentService:
         """
         by_label = {d.citation_label.lower(): d for d, _ in docs}
         by_id = {d.document_id.lower(): d for d, _ in docs}
+        by_title = {d.title.lower(): d for d, _ in docs}
         found: list[Citation] = []
         seen: set[str] = set()
         for m in re.finditer(r"\[([^\]]+)\]", text):
             key = m.group(1).strip().lower()
-            doc = by_label.get(key) or by_id.get(key)
+            doc = by_label.get(key) or by_id.get(key) or by_title.get(key)
+            if not doc:
+                # Substring fallback: "[Federalist No. 78]" should match
+                # label "May 28, 1788 \u2014 Federalist No. 78"
+                for d, _ in docs:
+                    if key in d.citation_label.lower() or key in d.title.lower():
+                        doc = d
+                        break
             if doc and doc.document_id not in seen:
                 seen.add(doc.document_id)
                 # Grab a short quoted passage near the marker, if any
