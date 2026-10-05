@@ -26,6 +26,7 @@ class FounderAgent(BaseModel):
     portrait_path: str = ""
     corpus_collections: list[str] = Field(default_factory=list)
     system_prompt: str = ""  # built from corpus metadata, not hardcoded
+    death_year: int | None = None  # anachronism cutoff for the agent
 
 
 class HistoricalDocument(BaseModel):
