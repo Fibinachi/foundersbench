@@ -1,0 +1,25 @@
+# Core
+fastapi>=0.110
+uvicorn>=0.29
+pydantic>=2.6
+
+# LLM providers (BYOK)
+anthropic>=0.30
+openai>=1.30
+
+# Retrieval — BM25 + metadata (free, deterministic)
+rank-bm25>=0.2.2
+
+# Optional: embeddings for semantic rerank
+# sentence-transformers>=2.6
+
+# Corpus processing
+beautifulsoup4>=4.12
+lxml>=5.1
+
+# NOTE: No PDF libraries. pypdf et al are fine (BSD), but do NOT add
+# any AGPL-licensed package — conflicts with PolyForm Noncommercial.
+# (This bit us with itext7 on Verdict.)
+
+# Dev
+pytest>=8.0
