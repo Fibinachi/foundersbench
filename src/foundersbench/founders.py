@@ -23,7 +23,7 @@ FOUNDERS: dict[str, dict] = {
         "corpus_collections": [
             "Federalist Papers",
             "Blackstone's Commentaries",
-            "Founders Online",
+            "The Works of Alexander Hamilton (J.C. Hamilton ed.)",
         ],
     },
     "madison": {
@@ -37,7 +37,8 @@ FOUNDERS: dict[str, dict] = {
         "corpus_collections": [
             "Federalist Papers",
             "Blackstone's Commentaries",
-            "Founders Online",
+            "The Writings of James Madison (Hunt ed.)",
+            "Journal of the Constitutional Convention",
         ],
     },
     "jefferson": {
@@ -46,11 +47,12 @@ FOUNDERS: dict[str, dict] = {
         "era": "Founding",
         "death_year": 1826,
         "affiliation": "Democratic-Republican",
-        "enabled": False,  # coming soon — needs Founders Online corpus
+        "enabled": True,
         "corpus_files": ["data/ambient.jsonl", "data/founder-jefferson.jsonl"],
         "corpus_collections": [
+            "Federalist Papers",
             "Blackstone's Commentaries",
-            "Founders Online",
+            "The Writings of Thomas Jefferson (Washington ed.)",
         ],
     },
     "adams": {
@@ -59,11 +61,11 @@ FOUNDERS: dict[str, dict] = {
         "era": "Founding",
         "death_year": 1826,
         "affiliation": "Federalist",
-        "enabled": False,  # coming soon — needs Founders Online corpus
+        "enabled": True,
         "corpus_files": ["data/ambient.jsonl", "data/founder-adams.jsonl"],
         "corpus_collections": [
             "Blackstone's Commentaries",
-            "Founders Online",
+            "The Works of John Adams (CFA ed.)",
         ],
     },
 }
