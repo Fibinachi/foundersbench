@@ -91,27 +91,85 @@ def fetch_text(url: str) -> str:
     return raw
 
 
+_ROMAN_VALUES = {
+    "I": 1, "V": 5, "X": 10, "L": 50, "C": 100, "D": 500, "M": 1000,
+}
+
+
+def _roman_to_int(roman: str) -> int:
+    """Convert a Roman numeral (I..LXXXV) to an integer."""
+    total = 0
+    prev = 0
+    for ch in reversed(roman.upper()):
+        val = _ROMAN_VALUES.get(ch, 0)
+        if val < prev:
+            total -= val
+        else:
+            total += val
+            prev = val
+    return total
+
+
+# Author byline as printed in the McLean edition, e.g. "HAMILTON", "MADISON".
+_FEDERALIST_BYLINE = {
+    "HAMILTON": "Alexander Hamilton",
+    "MADISON": "James Madison",
+    "JAY": "John Jay",
+    "PUBLIUS": "Publius",
+}
+
+
 def parse_federalist(text: str) -> list[dict]:
-    """Split Gutenberg Federalist text into 85 essay documents."""
-    # Headers look like: "FEDERALIST No. 1" possibly with "FEDERALIST. No. 1"
-    pattern = re.compile(
-        r"FEDERALIST[\.\s]+No\.\s*(\d+)", re.IGNORECASE
-    )
+    """Split Gutenberg Federalist text into 85 essay documents.
+
+    Essay headers in the McLean edition look like::
+
+        THE FEDERALIST.
+        No. I.
+
+        General Introduction
+
+        For the Independent Journal.
+
+        HAMILTON
+
+    Note the Table of Contents at the top of the file also contains
+    "FEDERALIST No. I." lines — those start with "FEDERALIST", while real
+    essay headers start the line with "No.", which is what we match.
+    """
+    pattern = re.compile(r"^No\.\s*([IVXLCDM]+)\.\s*$", re.MULTILINE)
     matches = list(pattern.finditer(text))
     docs = []
     for i, m in enumerate(matches):
-        num = int(m.group(1))
+        num = _roman_to_int(m.group(1))
         if num < 1 or num > 85:
             continue
         start = m.end()
         end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        body = text[start:end].strip()
-        # Clean up: remove excessive whitespace, page markers
+        chunk = text[start:end].strip()
+        lines = [ln.strip() for ln in chunk.splitlines()]
+        # Subtitle: first non-empty line after the header
+        subtitle = next((ln for ln in lines if ln), "")
+        # Byline: first all-caps HAMILTON/MADISON/JAY/PUBLIUS line
+        author = FEDERALIST_AUTHORS.get(num, "Publius")
+        for ln in lines[:12]:
+            key = ln.strip().upper().rstrip(".")
+            if key in _FEDERALIST_BYLINE:
+                author = _FEDERALIST_BYLINE[key]
+                break
+        # Body: drop the subtitle/publication/byline header block.
+        # Only scan the header block — body text may repeat the
+        # byline (running heads, signatures).
+        body_start = 0
+        for j, ln in enumerate(lines[:12]):
+            if ln.strip().upper().rstrip(".") in _FEDERALIST_BYLINE:
+                body_start = j + 1
+                break
+        body = "\n".join(lines[body_start:]).strip()
         body = re.sub(r"\n{3,}", "\n\n", body)
         body = re.sub(r"_+", "", body)
         if len(body) < 500:
             continue  # skip fragments
-        author = FEDERALIST_AUTHORS.get(num, "Publius")
         date_str = FEDERALIST_DATES.get(num)
         docs.append({
             "document_id": f"federalist-{num:02d}",
@@ -120,10 +178,15 @@ def parse_federalist(text: str) -> list[dict]:
             "recipient": None,
             "collection": "Federalist Papers",
             "corpus_layer": "PrintCulture",
-            "title": f"Federalist No. {num}",
+            "title": f"Federalist No. {num}"
+                     + (f": {subtitle}" if subtitle else ""),
             "full_text": body,
         })
-    return docs
+    # Deduplicate by essay number (keep first), sort by number
+    seen = {}
+    for d in docs:
+        seen.setdefault(d["document_id"], d)
+    return [seen[k] for k in sorted(seen)]
 
 
 # Blackstone Book 4 chapters relevant to criminal procedure.

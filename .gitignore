@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+data/founder-*.jsonl
+data/founders-online-metadata.json
+data/waf-cookies.txt
